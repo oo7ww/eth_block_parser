@@ -26,19 +26,24 @@ def T_Dict(trans_list):
 #contract-creating transaction: same to its name, to value is Null and transactionReceipt.contractAddress is not Null
 #contract-executing transaction: identified by the contract-address dict
 #identify a transaction's type
-def Type_id(transaction, transReceipt)
-    tran = dict()
-    tran = transaction
-    if tran['to'] == Null:
-      tran['type'] = 'contact-creating'
+def Type_id(transaction, transReceipt):
+    my_tran = dict()
+    for key, value in transaction.items():
+        my_tran[str(key)] = value
+    my_gasPrice = str(my_tran['gasPrice'])
+    my_tran['gasPrice'] = my_gasPrice
+    # tran = transaction
+    if my_tran['to'] == 'Null':
+      my_tran['type'] = 'contact-creating'
       address = transReceipt['contractAddress']
       global contract_addr
       contract_addr[address] = 'true'
-    elif tran['to'] in contract_addr:
-      tran['type'] = 'contract-executing'
+    elif my_tran['to'] in contract_addr:
+      my_tran['type'] = 'contract-executing'
     else:
-      tran['type'] = 'contract-none'
-    return tran
+      my_tran['type'] = 'contract-none'
+    del my_tran['value']
+    return my_tran
 
 #connect to the geth node
 web3 = Web3(IPCProvider("/root/.ethereum/geth.ipc"))
@@ -50,24 +55,29 @@ client = MongoClient('localhost', 27017)
 db = client['eth_block']
 
 #block and transaction collections
-block_collection = db['block_cl']
-transaction_collection = db['transaction_cl']
+block_cl = db['block_cl']
+if block_cl in db.collection_names():
+    block_cl.drop()
+#    block_cl = db['block_cl']
+transaction_cl = db['transaction_cl']
+if transaction_cl in db.collection_names():
+    transaction_cl.drop() 
 # collection for contract address
-contract_collection = db['contract_cl'] 
+contract_cl = db['contract_cl'] 
+# if contract_cl in db.collection_names():
+#    contract_cl.drop()
 
 # global dict for contract address
 contract_addr = dict()
 
-count = 0
-
 with open('/root/eth_block_parser/block_data.txt','w') as f:
-   for count in range(46147,46157):
+   for count in range(46147,47147):
        #get a block
        block = web3.eth.getBlock(count)
        #turn a block's AttributeDict to normal dict 
        n_dict = A_Dict(block)
        #test and ignore
-       print(str(n_dict['hash']))
+       # print(str(n_dict['hash']))
        a = str(count) + '\n'
        f.write(a)
        
@@ -77,8 +87,10 @@ with open('/root/eth_block_parser/block_data.txt','w') as f:
        n_dict['transaction_count'] = trans_num
        
        #test and ignore
-       print(trans_num)
+       # print(trans_num)
+      
        trans_str = 'this block has ' + str(trans_num) + 'transactions\n'
+       print(trans_str)
        f.write(trans_str)
 
        #new a transaction list
@@ -89,11 +101,15 @@ with open('/root/eth_block_parser/block_data.txt','w') as f:
            trans_temp = A_Dict(web3.eth.getTransactionFromBlock(blk_num, i))
            trans_hash = trans_temp['hash']
            trans_Receipt = A_Dict(web3.eth.getTransactionReceipt(trans_hash))
-           trans_todb = Type_id(trans_temp, trans_hash)
+           trans_todb = Type_id(trans_temp, trans_Receipt)
            #insert a transaction to MongoDB
-           flag = transaction_collection.insert_one(trans_todb)
-           test_trans = 'insert a transaction ' + str(flag) + '\n'  
-           print(test_trans)
+           for key, value in trans_todb.items():
+               c = str(key) + ' ' + str(value) + '\n'
+               print(c)
+               f.write(c)
+           flag = transaction_cl.insert_one(trans_todb)
+          # test_trans = 'insert a transaction ' + str(flag) + '\n'  
+           print(str(flag))
            trans_list.append(A_Dict(trans_temp))
       # for key, value in n_dict.items():
       #     t = str(key) + ' ' + str(value) + '\n'
@@ -109,11 +125,12 @@ with open('/root/eth_block_parser/block_data.txt','w') as f:
            f.write(b)
 
        #insert a block to Mongodb    
-       e = block_collection.insert_one(n_dict)
+       e = block_cl.insert_one(n_dict)
        #check the insert op
        print(str(e))  
        #save contract_address to db
-       test_contract = contract_collection.insert_one(contract_addr) 
+       contract_cl.drop()
+       test_contract = contract_cl.insert_one(contract_addr) 
        print(str(test_contract))
        
 print('process over!')
