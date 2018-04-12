@@ -33,8 +33,8 @@ def Type_id(transaction, transReceipt):
     my_gasPrice = str(my_tran['gasPrice'])
     my_tran['gasPrice'] = my_gasPrice
     # tran = transaction
-    if my_tran['to'] == 'Null':
-      my_tran['type'] = 'contact-creating'
+    if my_tran['to'] == 'None':
+      my_tran['type'] = 'contract-creating'
       address = transReceipt['contractAddress']
       global contract_addr
       contract_addr[address] = 'true'
@@ -71,7 +71,7 @@ contract_cl = db['contract_cl']
 contract_addr = dict()
 
 with open('/root/eth_block_parser/block_data.txt','w') as f:
-   for count in range(46147,47147):
+   for count in range(46147,146147):
        #get a block
        block = web3.eth.getBlock(count)
        #turn a block's AttributeDict to normal dict 
@@ -82,6 +82,8 @@ with open('/root/eth_block_parser/block_data.txt','w') as f:
        f.write(a)
        
        blk_num = block.number
+       log_blk = 'Current block : ' + str(blk_num) + '\n'
+       f.write(log_blk)
        trans_num = web3.eth.getBlockTransactionCount(blk_num)
        #add the transactions count to the normal dict of block
        n_dict['transaction_count'] = trans_num
