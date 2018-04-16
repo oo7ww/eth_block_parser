@@ -33,7 +33,8 @@ def Type_id(transaction, transReceipt):
     my_gasPrice = str(my_tran['gasPrice'])
     my_tran['gasPrice'] = my_gasPrice
     # tran = transaction
-    if my_tran['to'] == 'None':
+    #'to':'0x0000000000000000000000000000000000000000'
+    if my_tran['to'] == '0x0000000000000000000000000000000000000000':
       my_tran['type'] = 'contract-creating'
       address = transReceipt['contractAddress']
       global contract_addr
