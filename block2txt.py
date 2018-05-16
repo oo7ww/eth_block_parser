@@ -32,6 +32,8 @@ def Type_id(transaction, transReceipt):
         my_tran[str(key)] = value
     my_gasPrice = str(my_tran['gasPrice'])
     my_tran['gasPrice'] = my_gasPrice
+    my_value = str(my_tran['value'])
+    my_tran['value'] = my_value
     # tran = transaction
     #'to':'0x0000000000000000000000000000000000000000'
     if my_tran['to'] == '0x0000000000000000000000000000000000000000' or my_tran['to'] == 'None':
@@ -43,7 +45,7 @@ def Type_id(transaction, transReceipt):
       my_tran['type'] = 'contract-executing'
     else:
       my_tran['type'] = 'contract-none'
-    del my_tran['value']
+    #del my_tran['value']
     return my_tran
 
 #connect to the geth node
